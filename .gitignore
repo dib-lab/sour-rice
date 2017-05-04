@@ -1,0 +1,4 @@
+.doit.db.db
+.ipynb_checkpoints/
+__pycache__/
+*.minhash
