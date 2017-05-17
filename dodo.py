@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import pandas
 from doit.tools import run_once
@@ -35,18 +36,17 @@ def task_get_samples():
     }
 
 
-def task_run_sourrice():
-    if not os.path.exists('sample-accessions.txt'):
-        return False
+def task_download():
+    if not os.path.exists('metadata.tsv'):
+        return None
 
-    with open('sample-accessions.txt', 'r') as infile:
-        for line in infile:
-            accession = line.strip()
-            cmd = './sourrice.py -k 27 ' + accession
-            outfile = accession + '.minhash'
-            yield {
-                'name': outfile,
-                'actions': [cmd],
-                'targets': [outfile],
-                'uptodate': [run_once],
-            }
+    metadata = pandas.read_table('metadata.tsv')
+    for accession in sorted(metadata['Run_acc'].unique()):
+        outfile = 'sra-fastq/{prefix}/{acc}.fq.gz'.format(prefix=accession[:5], acc=accession)
+        cmd = 'fastq-dump --split-files -Z {acc} | gzip -c > {of}'.format(acc=accession, of=outfile)
+        yield {
+            'name': outfile,
+            'actions': [cmd],
+            'targets': [outfile],
+            'uptodate': [run_once]
+        }
